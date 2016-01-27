@@ -2,6 +2,7 @@ __author__ = 'user'
 from VesselFileReader import VesselFileReader
 from ResamplePaths import ResamplePaths
 
+
 def read_scores(filename, overlap_io):
     # overlap_io we can define as an 2d dict
     # reading "observerscores.txt" line by line and store in overlap_io
@@ -37,13 +38,14 @@ def path_length(list):
         return 0.0
     cumlen = 0.0
     for index, point in enumerate(list):
-        list[index-1].subtract(point)
+        list[index - 1].subtract(point)
         # print list[index-1].get_x()
-        resample_result = list[index-1].length()
+        resample_result = list[index - 1].length()
         # print resample_result
         cumlen += resample_result
         # print cumlen
     return cumlen
+
 
 # calculate clipping point based on disk at start of reference
 def start_cl_from(s, n, rad, cl):
@@ -54,21 +56,36 @@ def start_cl_from(s, n, rad, cl):
     start_at = -1
     iter_i = cl[0]
     index = 0
-    iter_j = cl[index+1]
-    while start_at < 0  and index < len(cl)-2:
+    iter_j = cl[index + 1]
+    while start_at < 0 and index < len(cl) - 2:
+        iter_i = cl[index]
+        iter_j = cl[index + 1]
         # test whether line segment intersects plane of disc
-        temp1 = iter_j.subtract(s)
-        fig1 = temp1.dot(n)
-        temp2 = iter_j.subtract(s)
-        temp2.multiply(n)
-        fig2 = temp2.dot(n)
+        iter_j.subtract(s)
+        fig1 = iter_j.dot(n)
+        iter_j.subtract(s)
+        iter_j.multiply(n)
+        fig2 = iter_j.dot(n)
         if fig1 * fig2 < 0.0:
             # possibly found intersection, linearly interpolate position at disk
             a = fig1
             b = -1.0 * fig2
-            # TODO ...
+            iter_i.multiply(b / (a + b))
+            iter_j.multiply(a / (a + b))
+            pos = iter_i.add(iter_j)
 
+            # test distance of intersection to start pos: should be less than 2 x radius
+            pos.subtract(s)
+            res = pos.length()
+            if res < 2.0 * rad:
+                # start_at = int(j - cl.begin())
+                start_at = int(index + 1 - 0)
+        index += 1
 
+    if start_at >= 0:
+        return start_at
+    else:
+        return 0
 
 
 def main(ds_nr, vs_nr, file_ref, file_cl, file_observer_scores):
@@ -122,8 +139,8 @@ def main(ds_nr, vs_nr, file_ref, file_cl, file_observer_scores):
     # clip centerline, based on disk at start of reference.
     # calculate clipping point
 
-
-
+    clip_up_to = start_cl_from(reference_point_list[0], reference_point_list[1].subtract(reference_point_list[0]),
+                               rad[0], centerline_point_list)
 
 
 main(0,
