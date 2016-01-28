@@ -60,23 +60,27 @@ def start_cl_from(s, n, rad, cl):
     while start_at < 0 and index < len(cl) - 2:
         iter_i = cl[index]
         iter_j = cl[index + 1]
+
         # test whether line segment intersects plane of disc
         iter_j.subtract(s)
         fig1 = iter_j.dot(n)
+        # print fig1
         iter_j.subtract(s)
         iter_j.multiply(n)
         fig2 = iter_j.dot(n)
+        # print fig2
+
         if fig1 * fig2 < 0.0:
             # possibly found intersection, linearly interpolate position at disk
             a = fig1
             b = -1.0 * fig2
-            iter_i.multiply(b / (a + b))
-            iter_j.multiply(a / (a + b))
-            pos = iter_i.add(iter_j)
+            iter_i.multiply_fig(b / (a + b))
+            iter_j.multiply_fig(a / (a + b))
+            iter_i.add(iter_j)
 
             # test distance of intersection to start pos: should be less than 2 x radius
-            pos.subtract(s)
-            res = pos.length()
+            iter_i.subtract(s)
+            res = iter_i.length()
             if res < 2.0 * rad:
                 # start_at = int(j - cl.begin())
                 start_at = int(index + 1 - 0)
@@ -138,9 +142,20 @@ def main(ds_nr, vs_nr, file_ref, file_cl, file_observer_scores):
 
     # clip centerline, based on disk at start of reference.
     # calculate clipping point
-
-    clip_up_to = start_cl_from(reference_point_list[0], reference_point_list[1].subtract(reference_point_list[0]),
+    reference_point_list[1].subtract(reference_point_list[0])
+    # print reference_point_list[1].get_x()
+    clip_up_to = start_cl_from(reference_point_list[0], reference_point_list[1],
                                rad[0], centerline_point_list)
+    print clip_up_to
+
+    # clip centerline
+    centerline_point_list = centerline_point_list[clip_up_to:]
+
+    # the input is correct
+    # Evaluation measure calculation starts here
+    # *******************************************
+
+    # Determine correspondence between reference and method centerline.
 
 
 main(0,
